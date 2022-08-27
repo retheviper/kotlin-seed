@@ -42,13 +42,17 @@ class Planter<T : Any>(private val context: SeedParserContext) {
                 seed::class.memberProperties.find { it.name == name }?.let { field ->
                     field.call(seed)?.let {
                         when (field.returnType) {
-                            JavaTimeType.LOCAL_DATE.type -> dateFormatter.format(it as LocalDate)
-                            JavaTimeType.LOCAL_TIME.type -> timeFormatter.format(it as LocalTime)
-                            JavaTimeType.LOCAL_DATE_TIME.type, JavaTimeType.LOCAL_DATE_TIME_NULLABLE.type -> dateTimeFormatter.format(
-                                it as LocalDateTime
-                            )
+                            JavaTimeType.LOCAL_DATE.type ->
+                                dateFormatter.format(it as LocalDate)
 
-                            else -> it.toString().apply { if (context.trimWhiteSpace) trim() }
+                            JavaTimeType.LOCAL_TIME.type ->
+                                timeFormatter.format(it as LocalTime)
+
+                            JavaTimeType.LOCAL_DATE_TIME.type, JavaTimeType.LOCAL_DATE_TIME_NULLABLE.type ->
+                                dateTimeFormatter.format(it as LocalDateTime)
+
+                            else ->
+                                it.toString().apply { if (context.trimWhiteSpace) trim() }
                         }
                     } ?: ""
                 }
