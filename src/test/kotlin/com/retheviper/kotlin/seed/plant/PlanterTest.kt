@@ -27,11 +27,11 @@ class PlanterTest : FreeSpec({
         }
     }
 
-//    afterAny {
-//        withContext(Dispatchers.IO) {
-//            Files.deleteIfExists(file)
-//        }
-//    }
+    afterAny {
+        withContext(Dispatchers.IO) {
+            Files.deleteIfExists(file)
+        }
+    }
 
     "with header name annotation" {
         data class TestData(

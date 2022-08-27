@@ -37,7 +37,6 @@ class Planter<T : Any>(private val context: SeedParserContext) {
             }
         }
 
-
         val rows = seeds.map { seed ->
             fieldNames.mapNotNull { name ->
                 seed::class.memberProperties.find { it.name == name }?.let { field ->
