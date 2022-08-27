@@ -125,8 +125,6 @@ class PlanterTest : FreeSpec({
             targetFile = file.toFile()
         )
 
-        println(file)
-
         val actual = csvReader().readAllWithHeader(file.toFile())
 
         actual.forEachIndexed { index, row ->

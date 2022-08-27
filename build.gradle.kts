@@ -39,6 +39,7 @@ tasks {
     compileTestKotlin {
         kotlinOptions {
             jvmTarget = "11"
+            freeCompilerArgs = listOf("-XOpt-in=kotlin.RequiresOptIn")
         }
     }
 }

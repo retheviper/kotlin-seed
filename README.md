@@ -64,15 +64,15 @@ seed.plant(
 
 ### CSV results
 
-| birth            | id  | joined     | name | total |
-|------------------|-----|------------|------|-------|
-| 1980-03-01 12:00 | 1   | 2020-04-15 | John | 12:30 |
-| 1981-04-01 13:00 | 2   | 2021-05-15 | Jane | 13:30 |
-| 1982-05-01 14:00 | 3   | 2022-06-15 | Jack | 14:30 |
+| id  | name | birth            | joined     | total |
+|-----|------|------------------|------------|-------|
+| 1   | John | 1980-03-01 12:00 | 2020-04-15 | 12:30 |
+| 2   | Jane | 1981-04-01 13:00 | 2021-05-15 | 13:30 |
+| 3   | Jack | 1982-05-01 14:00 | 2022-06-15 | 14:30 |
 
 ### Use annotation for header
 
-#### Declare data class with annotation (CSV column's order will same as declaration order of fields)
+#### Declare data class with annotation
 
 ```kotlin
 

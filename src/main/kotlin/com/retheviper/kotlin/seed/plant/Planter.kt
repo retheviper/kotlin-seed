@@ -11,8 +11,9 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.primaryConstructor
 
-class Planter<T>(private val context: SeedParserContext) {
+class Planter<T : Any>(private val context: SeedParserContext) {
 
     private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(context.timeFormat)
 
@@ -27,21 +28,31 @@ class Planter<T>(private val context: SeedParserContext) {
         append: Boolean = false,
         csvWriterContext: CsvWriterContext.() -> Unit = {}
     ) {
-        val headers = seeds.first()!!::class.memberProperties.map { property ->
-            val name = property.annotations.filterIsInstance<CsvHeaderName>().firstOrNull()
-            name?.value?.apply { if (context.trimWhiteSpace) trim() } ?: property.name
+        val fieldNames = seeds.first()::class.primaryConstructor!!.parameters.mapNotNull { it.name }
+
+        val headers = fieldNames.mapNotNull { name ->
+            seeds.first()::class.memberProperties.find { it.name == name }?.let { property ->
+                val headerName = property.annotations.filterIsInstance<CsvHeaderName>().firstOrNull()
+                headerName?.value?.apply { if (context.trimWhiteSpace) trim() } ?: property.name
+            }
         }
 
-        val rows = seeds.mapNotNull { seed ->
-            seed!!::class.memberProperties.map { field ->
-                field.call(seed)?.let {
-                    when (field.returnType) {
-                        JavaTimeType.LOCAL_DATE.type -> dateFormatter.format(it as LocalDate)
-                        JavaTimeType.LOCAL_TIME.type -> timeFormatter.format(it as LocalTime)
-                        JavaTimeType.LOCAL_DATE_TIME.type, JavaTimeType.LOCAL_DATE_TIME_NULLABLE.type -> dateTimeFormatter.format(it as LocalDateTime)
-                        else -> it.toString().apply { if (context.trimWhiteSpace) trim() }
-                    }
-                } ?: ""
+
+        val rows = seeds.map { seed ->
+            fieldNames.mapNotNull { name ->
+                seed::class.memberProperties.find { it.name == name }?.let { field ->
+                    field.call(seed)?.let {
+                        when (field.returnType) {
+                            JavaTimeType.LOCAL_DATE.type -> dateFormatter.format(it as LocalDate)
+                            JavaTimeType.LOCAL_TIME.type -> timeFormatter.format(it as LocalTime)
+                            JavaTimeType.LOCAL_DATE_TIME.type, JavaTimeType.LOCAL_DATE_TIME_NULLABLE.type -> dateTimeFormatter.format(
+                                it as LocalDateTime
+                            )
+
+                            else -> it.toString().apply { if (context.trimWhiteSpace) trim() }
+                        }
+                    } ?: ""
+                }
             }
         }
 
