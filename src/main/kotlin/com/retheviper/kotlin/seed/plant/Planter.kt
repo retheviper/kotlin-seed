@@ -31,8 +31,8 @@ class Planter<T : Any>(private val context: SeedParserContext) {
         val rows = getRows(seeds, fieldNames)
 
         csvWriter(csvWriterContext).writeAll(
-                rows = headers + rows, targetFile = targetFile, append = append
-            )
+            rows = headers + rows, targetFile = targetFile, append = append
+        )
     }
 
     private fun getHeaders(
@@ -40,9 +40,9 @@ class Planter<T : Any>(private val context: SeedParserContext) {
     ): List<List<String>> {
         val header = fieldNames.mapNotNull { name ->
             seeds.first()::class.memberProperties.find { it.name == name }?.let { property ->
-                    val headerName = property.annotations.filterIsInstance<CsvHeaderName>().firstOrNull()
-                    headerName?.value?.trimIfNecessary() ?: property.name
-                }
+                val headerName = property.annotations.filterIsInstance<CsvHeaderName>().firstOrNull()
+                headerName?.value?.trimIfNecessary() ?: property.name
+            }
         }
         return listOf(header)
     }
@@ -53,9 +53,9 @@ class Planter<T : Any>(private val context: SeedParserContext) {
         return seeds.map { seed ->
             fieldNames.mapNotNull { name ->
                 seed::class.memberProperties.find { it.name == name }?.let { field ->
-                        val value = field.call(seed)
-                        if (value != null) convertToString(field, value) else ""
-                    }
+                    val value = field.call(seed)
+                    if (value != null) convertToString(field, value) else ""
+                }
             }
         }
     }
