@@ -10,6 +10,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 
@@ -23,46 +24,57 @@ class Planter<T : Any>(private val context: SeedParserContext) {
         DateTimeFormatter.ofPattern("${context.dateFormat}${context.dateTimeSeparator}${context.timeFormat}")
 
     fun plant(
-        seeds: List<T>,
-        targetFile: File,
-        append: Boolean = false,
-        csvWriterContext: CsvWriterContext.() -> Unit = {}
+        seeds: List<T>, targetFile: File, append: Boolean = false, csvWriterContext: CsvWriterContext.() -> Unit = {}
     ) {
         val fieldNames = seeds.first()::class.primaryConstructor!!.parameters.mapNotNull { it.name }
-
-        val headers = fieldNames.mapNotNull { name ->
-            seeds.first()::class.memberProperties.find { it.name == name }?.let { property ->
-                val headerName = property.annotations.filterIsInstance<CsvHeaderName>().firstOrNull()
-                headerName?.value?.apply { if (context.trimWhiteSpace) trim() } ?: property.name
-            }
-        }
-
-        val rows = seeds.map { seed ->
-            fieldNames.mapNotNull { name ->
-                seed::class.memberProperties.find { it.name == name }?.let { field ->
-                    field.call(seed)?.let {
-                        when (field.returnType) {
-                            JavaTimeType.LOCAL_DATE.type ->
-                                dateFormatter.format(it as LocalDate)
-
-                            JavaTimeType.LOCAL_TIME.type ->
-                                timeFormatter.format(it as LocalTime)
-
-                            JavaTimeType.LOCAL_DATE_TIME.type, JavaTimeType.LOCAL_DATE_TIME_NULLABLE.type ->
-                                dateTimeFormatter.format(it as LocalDateTime)
-
-                            else ->
-                                it.toString().apply { if (context.trimWhiteSpace) trim() }
-                        }
-                    } ?: ""
-                }
-            }
-        }
+        val headers = getHeaders(seeds, fieldNames)
+        val rows = getRows(seeds, fieldNames)
 
         csvWriter(csvWriterContext).writeAll(
-            rows = listOf(headers) + rows,
-            targetFile = targetFile,
-            append = append
-        )
+                rows = headers + rows, targetFile = targetFile, append = append
+            )
+    }
+
+    private fun getHeaders(
+        seeds: List<T>, fieldNames: List<String>
+    ): List<List<String>> {
+        val header = fieldNames.mapNotNull { name ->
+            seeds.first()::class.memberProperties.find { it.name == name }?.let { property ->
+                    val headerName = property.annotations.filterIsInstance<CsvHeaderName>().firstOrNull()
+                    headerName?.value?.trimIfNecessary() ?: property.name
+                }
+        }
+        return listOf(header)
+    }
+
+    private fun getRows(
+        seeds: List<T>, fieldNames: List<String>
+    ): List<List<String>> {
+        return seeds.map { seed ->
+            fieldNames.mapNotNull { name ->
+                seed::class.memberProperties.find { it.name == name }?.let { field ->
+                        val value = field.call(seed)
+                        if (value != null) convertToString(field, value) else ""
+                    }
+            }
+        }
+    }
+
+    private fun convertToString(field: KProperty1<out T, *>, value: Any): String {
+        return when (field.returnType) {
+            JavaTimeType.LOCAL_DATE.type -> dateFormatter.format(value as LocalDate)
+
+            JavaTimeType.LOCAL_TIME.type -> timeFormatter.format(value as LocalTime)
+
+            JavaTimeType.LOCAL_DATE_TIME.type, JavaTimeType.LOCAL_DATE_TIME_NULLABLE.type -> dateTimeFormatter.format(
+                value as LocalDateTime
+            )
+
+            else -> value.toString().trimIfNecessary()
+        }
+    }
+
+    private fun String.trimIfNecessary(): String {
+        return if (context.trimWhiteSpace) this.trim() else this
     }
 }
