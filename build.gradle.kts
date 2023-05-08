@@ -1,7 +1,5 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
-    kotlin("jvm") version "1.5.32"
+    kotlin("jvm") version "1.7.21"
 }
 
 group = "com.retheviper.kotlin.seed"
@@ -11,12 +9,11 @@ repositories {
     mavenCentral()
 }
 
-dependencies {
-    // kotlin
+dependencies { // kotlin
     implementation(kotlin("reflect"))
 
     // kotlin-csv
-    implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.6.0")
+    implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.9.0")
 
     // test
     testImplementation("io.kotest:kotest-runner-junit5:5.4.2")
@@ -26,6 +23,11 @@ dependencies {
     testImplementation("io.github.blackmo18:kotlin-grass-date-time-jvm:0.8.0")
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
 tasks {
     test {
         useJUnitPlatform()
@@ -33,12 +35,12 @@ tasks {
 
     compileKotlin {
         kotlinOptions {
-            jvmTarget = "11"
+            jvmTarget = "17"
         }
     }
     compileTestKotlin {
         kotlinOptions {
-            jvmTarget = "11"
+            jvmTarget = "17"
             freeCompilerArgs = listOf("-XOpt-in=kotlin.RequiresOptIn")
         }
     }

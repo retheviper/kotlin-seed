@@ -3,7 +3,11 @@
 > Kotlin Data Class to CSV Converter<br>
 > Uses [kotlin-csv by doyaaaaaken](https://github.com/doyaaaaaken/kotlin-csv/)<br>
 > Inspired by [Kotlin-Grass](https://github.com/blackmo18/kotlin-grass)
-> 
+
+## Requirements
+
+- Java 17
+
 ## Examples
 
 ### Declare data class
@@ -26,6 +30,7 @@ val seed = seed<TestData> {
     timeFormat = "HH:mm" // default
     dateTime = " " // default
     trimWhiteSpace = true // default
+    headerNamingStrategy = HeaderNamingStrategies.CAMEL_TO_SPACE // nullable
 }
 ```
 
@@ -73,8 +78,6 @@ seed.plant(
 ### Use annotation for header
 
 #### Declare data class with annotation
-
-```kotlin
 
 ```kotlin
 data class TestData(
@@ -131,3 +134,5 @@ seed<TestData>().plant(
 | 1   | John | 1980-03-01 12:00 | 2020-04-15  | 12:30      |
 | 2   | Jane | 1981-04-01 13:00 | 2021-05-15  | 13:30      |
 | 3   | Jack | 1982-05-01 14:00 | 2022-06-15  | 14:30      |
+
+or you can find more examples in [src/test/kotlin](./src/test/kotlin)

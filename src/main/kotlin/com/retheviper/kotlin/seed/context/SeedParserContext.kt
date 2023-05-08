@@ -1,5 +1,7 @@
 package com.retheviper.kotlin.seed.context
 
+import com.retheviper.kotlin.seed.naming.HeaderNamingStrategies
+
 class SeedParserContext(
     /**
      *  date formatting
@@ -22,5 +24,10 @@ class SeedParserContext(
     /**
      * trim white spaces in csv column content
      */
-    var trimWhiteSpace: Boolean = true
+    var trimWhiteSpace: Boolean = true,
+
+    /**
+     * header naming strategy (only available with camel case)
+     */
+    var headerNamingStrategy: HeaderNamingStrategies? = null
 )

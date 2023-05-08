@@ -4,6 +4,7 @@ import com.github.doyaaaaaken.kotlincsv.dsl.context.CsvWriterContext
 import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
 import com.retheviper.kotlin.seed.annotation.CsvHeaderName
 import com.retheviper.kotlin.seed.context.SeedParserContext
+import com.retheviper.kotlin.seed.naming.HeaderNamingStrategies
 import com.retheviper.kotlin.seed.types.JavaTimeType
 import java.io.File
 import java.time.LocalDate
@@ -23,9 +24,13 @@ class Planter<T : Any>(private val context: SeedParserContext) {
     private val dateTimeFormatter: DateTimeFormatter =
         DateTimeFormatter.ofPattern("${context.dateFormat}${context.dateTimeSeparator}${context.timeFormat}")
 
+    private val pattern = "(?<=.)[A-Z]".toRegex()
+    
     fun plant(
         seeds: List<T>, targetFile: File, append: Boolean = false, csvWriterContext: CsvWriterContext.() -> Unit = {}
     ) {
+        if (seeds.isEmpty()) return
+
         val fieldNames = seeds.first()::class.primaryConstructor!!.parameters.mapNotNull { it.name }
         val headers = getHeaders(seeds, fieldNames)
         val rows = getRows(seeds, fieldNames)
@@ -41,7 +46,8 @@ class Planter<T : Any>(private val context: SeedParserContext) {
         val header = fieldNames.mapNotNull { name ->
             seeds.first()::class.memberProperties.find { it.name == name }?.let { property ->
                 val headerName = property.annotations.filterIsInstance<CsvHeaderName>().firstOrNull()
-                headerName?.value?.trimIfNecessary() ?: property.name
+                val headerNameValue = headerName?.value?.trimIfNecessary() ?: property.name
+                context.headerNamingStrategy?.let { headerNameValue.convertCaseWith(it) } ?: headerNameValue
             }
         }
         return listOf(header)
@@ -76,5 +82,16 @@ class Planter<T : Any>(private val context: SeedParserContext) {
 
     private fun String.trimIfNecessary(): String {
         return if (context.trimWhiteSpace) this.trim() else this
+    }
+
+    private fun String.convertCaseWith(strategy: HeaderNamingStrategies): String {
+        return when (strategy) {
+            HeaderNamingStrategies.CAMEL_TO_KEBAB -> this.replace(pattern, "-$0").lowercase()
+            HeaderNamingStrategies.CAMEL_TO_UPPER_KEBAB -> this.replace(pattern, "-$0").uppercase()
+            HeaderNamingStrategies.CAMEL_TO_SNAKE -> this.replace(pattern, "_$0").lowercase()
+            HeaderNamingStrategies.CAMEL_TO_UPPER_SNAKE -> this.replace(pattern, "_$0").uppercase()
+            HeaderNamingStrategies.CAMEL_TO_SPACE -> this.replace(pattern, " $0").lowercase()
+            HeaderNamingStrategies.CAMEL_TO_UPPER_SPACE -> this.replace(pattern, " $0").uppercase()
+        }
     }
 }
